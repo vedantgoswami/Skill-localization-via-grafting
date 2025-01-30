@@ -1,8 +1,11 @@
 """Finetuning the library models for sequence classification on GLUE."""
+import os
+os.environ["WANDB_DISABLED"] = "true"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 from datasets import load_metric    
 import dataclasses
 import logging
-import os
 import errno
 import sys
 from dataclasses import dataclass, field
@@ -39,7 +42,6 @@ import pickle
 
 logger = logging.getLogger(__name__)
 
-os.environ["WANDB_DISABLED"] = "true"
 
 
 @dataclass

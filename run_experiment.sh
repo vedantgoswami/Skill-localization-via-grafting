@@ -8,7 +8,7 @@
 # MODEL: pre-trained model name (roberta-*, bert-*), see Transformers model list
 
 # Number of training instances per label
-#K=16
+# K=16
 
 # Training steps
 MAX_STEP=$max_step
@@ -118,13 +118,12 @@ esac
 REAL_BS=2
 GS=$(expr $BS / $REAL_BS)
 
-
 # Use a random number to distinguish different trails (avoid accidental overwriting)
 TRIAL_IDTF=$RANDOM
-DATA_DIR=../data/k-shot/$TASK/$K-$SEED
+DATA_DIR=./data/k-shot/$TASK/$K-$SEED
 modelseed=$modelseed
-log_file_store=../log_files/log_noembed_SGD_graft
-output_dir=../ckpt_paths/log_noembed_SGD_graft/$TASK-$TYPE-$K-$SEED-$MODELNAME-$TRIAL_IDTF-$REAL_BS-$LR
+log_file_store=./log_files/log_noembed_SGD_graft
+output_dir=./ckpt_paths/log_noembed_SGD_graft/$TASK-$TYPE-$K-$SEED-$MODELNAME-$TRIAL_IDTF-$REAL_BS-$LR
 
 
 
@@ -132,7 +131,9 @@ if [ $MODEL == 'roberta-base' ]; then
     len=128;
 elif [ $MODEL == 'gpt2' ]; then
     len=256;
-fi    
+else 
+    len=128;
+fi          
 
 
 
@@ -156,7 +157,7 @@ python run.py \
   --max_steps $MAX_STEP \
   --logging_steps $EVAL_STEP \
   --eval_steps $EVAL_STEP \
-  --num_train_epochs 0 \
+  --num_train_epochs 100 \
   --output_dir $output_dir \
   --seed $modelseed \
   --tag $TAG \
@@ -167,7 +168,7 @@ python run.py \
   --weight_decay 1e-4\
   --log_file_store $log_file_store\
   --use_CLS_linearhead $useCLS \
-  --fix_head $fixhead\
+  --fix_head $fixhead \
   --fix_embeddings $fixembeddings\
   --train_bias_only $train_bias_only\
   $TASK_EXTRA \

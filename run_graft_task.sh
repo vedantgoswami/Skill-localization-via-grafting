@@ -1,35 +1,33 @@
-modelbase='roberta-base';
-task='SST-2';
+modelbase='roberta-large';
+task='QQP';
 seed=0;
-K=16;
-sparsitylevel=1e-07 ;
+sparsitylevel=1e-04 ;
 lr=1e7 ;
-no_train=True; 
+no_train=False; 
 
 
-model_path="../ckpt_paths/log_noembed_SGD_graft/SST-2-prompt-16-0-roberta-base-4384-2-1e-3"
+model_path="./fine_tune_ckpt/QQP-roberta-large-4096-0-100";
 mask_path="highest_movement";
-modelbase='roberta-base';
 
-for K in 16; do
-    TAG=exp \
-    TYPE=prompt \
-    TASK=$task \
-    K=$K \
-    LR=$lr \
-    SEED=$seed \
-    MODEL=$model_path \
-    uselmhead=1 \
-    useCLS=0\
-    num_train_epochs=10 \
-    mask_path=$mask_path \
-    sparsitylevel=$sparsitylevel \
-    pretrained_model=$modelbase \
-    fixhead=True \
-    fixembeddings=True \
-    truncate_head=True\
-    train_bias_only=False \
-    no_train=$no_train \
-    checkpoint_location="/tmp/mask_path"\
-    bash run_graft_experiment.sh;
-done
+#2b62f341a7b8
+
+TAG=exp \
+TYPE=prompt \
+TASK=$task \
+K=4096 \
+LR=$lr \
+SEED=$seed \
+MODEL=$model_path \
+uselmhead=1 \
+useCLS=0 \
+num_train_epochs=100 \
+mask_path=$mask_path \
+sparsitylevel=$sparsitylevel \
+pretrained_model=$modelbase \
+fixhead=False \
+fixembeddings=True \
+truncate_head=False \
+train_bias_only=False \
+no_train=$no_train \
+checkpoint_location="./saved_mask/roberta_large_100_qqp" \
+bash run_graft_experiment.sh

@@ -7,7 +7,7 @@ from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 import math 
 from transformers import get_constant_schedule_with_warmup, get_constant_schedule, get_linear_schedule_with_warmup
-from datasets import load_metric    
+from datasets import load_metric
 
 class graft_Trainer(nn.Module):
     def __init__(self, model_trainer):
@@ -19,7 +19,7 @@ class graft_Trainer(nn.Module):
         
         self.trainer.select_trainable_parameters()
         self.params  = self.trainer.params
-        
+        self.num_params = 0
         
     
     ########################################################################################################################
@@ -86,7 +86,8 @@ class graft_Trainer(nn.Module):
     ########################################################################################################################
     #The following function gets the grafted model with a given mask (or the current trainable parameters)
     ########################################################################################################################
-    def interpolate_model(self, round_=False, mask=None):  
+    def interpolate_model(self, round_=False, mask=None):
+        torch.save(self.basepatch,"./saved_basepatch/roberta_large_100_basepatch_qqp") 
         sigmoid = torch.nn.Sigmoid()
         sigmoid_bias = self.args.sigmoid_bias
         for counter in range(len(self.trainable_name)):
@@ -281,11 +282,11 @@ class graft_Trainer(nn.Module):
 
                 loss.backward()
                 
-                for n, p in self.model.named_parameters() :
-                    if n in self.trainable_name :
-                        if p.grad is None: print (n)
+                # for n, p in self.model.named_parameters() :
+                #     if n in self.trainable_name :
+                #         if p.grad is None: print (n)
 
-                grad = [p.grad.detach().clone() for n, p in self.model.named_parameters() if n in self.trainable_name]
+                grad = [p.grad.detach().clone() if p.grad is not None else 0 for n, p in self.model.named_parameters() if n in self.trainable_name]
                 self.model.zero_grad()
                 grad = [ g * p.to(device) for (g, p) in zip(grad, self.grad_directions) ]
 

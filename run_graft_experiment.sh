@@ -110,14 +110,16 @@ esac
 # For medium-sized GPUs (e.g., 2080ti with 10GB memory), they can only take 
 # a maximum batch size of 2 when using large-size models. So we use gradient
 # accumulation steps to achieve the same effect of larger batch sizes.
-DATA_DIR=../data/k-shot/$TASK/$K-$SEED
-log_file_store=../log_files/log_noembed_SGD_graft
+DATA_DIR=./data/k-shot/$TASK/$K-$SEED
+log_file_store=./log_files/log_noembed_SGD_graft
 
 if [ $pretrained_model == 'roberta-base' ]; then
     len=128;
 elif [ $pretrained_model == 'gpt2' ]; then
     len=256;
-fi    
+else 
+    len=128;
+fi   
 
 python Grafting.py \
   --task_name $TASK \

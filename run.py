@@ -3,11 +3,12 @@
 import dataclasses
 import logging
 import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import sys
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Optional, List
 import torch
-
 import numpy as np
 
 import transformers
@@ -33,7 +34,6 @@ import json
 logger = logging.getLogger(__name__)
 
 os.environ["WANDB_DISABLED"] = "true"
-
 #print (compute_metrics_mapping['telephone_letters'])
 #exit(0)
 
@@ -509,7 +509,7 @@ def main():
             config=config,
             cache_dir=model_args.cache_dir,
         )
-
+        model.save_pretrained("./pretrained_ckpt/roberta-base")
         # For BERT, increase the size of the segment (token type) embeddings
         if config.model_type == 'bert':
             model.resize_token_embeddings(len(tokenizer))
@@ -524,11 +524,11 @@ def main():
         model.model_args = model_args
         model.data_args = data_args
         model.tokenizer = tokenizer
-        
+        print(model.model_args)
         model.initial_parameters_copy = [p.detach().clone() for p in model.parameters()]
         if (model_args.few_shot_type == 'finetune' and model_args.use_CLS_linearhead == 1):
             model.classifier = torch.nn.Linear(config.hidden_size, config.num_labels)
-
+        
     else:
         config_kwargs = {}
         config = AutoConfig.from_pretrained(
@@ -547,7 +547,8 @@ def main():
             config=config,
             cache_dir=model_args.cache_dir,
         )
-        model.parallelize()
+        
+        # model.parallelize(device_ids=[0])
     
     
     
@@ -593,7 +594,9 @@ def main():
     else:
         trainer_class = Trainer
     
-    
+    if isinstance(model, torch.nn.DataParallel):
+        model = model.module
+    model = model.cuda()
     # Initialize our Trainer
     trainer = trainer_class(
         model=model,
@@ -618,7 +621,9 @@ def main():
             trainer.model = model
             
         else:        
-            trainer.train(model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None)
+            # trainer.train(model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None)
+            model_p = model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+            trainer.train(model_path=model_p)
             # Use the early stop, so do not save the model in the end (unless specify save_at_last)
             if training_args.save_at_last:
                 trainer.save_model(training_args.output_dir)

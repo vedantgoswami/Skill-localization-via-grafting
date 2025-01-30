@@ -272,6 +272,7 @@ class Trainer(transformers.Trainer):
         The training logic is directly borrowed from transformers.Trainer (version 3.0.2).
         Add early stopping.
         """
+        
         self.best_dir = None
         self.objective = -float("inf")
         self.dev_objective = dev_objective if dev_objective is not None else default_dev_objective
@@ -379,23 +380,22 @@ class Trainer(transformers.Trainer):
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                     self.args.device
                 )
-                epoch_iterator = tqdm(parallel_loader, desc="Iteration", disable=not self.is_local_master())
+                epoch_iterator = tqdm(parallel_loader, desc="Iteration", disable=False)
             else:
-                epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=True)
+                epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=False)
 
             # Reset the past mems state at the beginning of each epoch if necessary.
             if self.args.past_index >= 0:
                 self._past = None
 
             for step, inputs in enumerate(epoch_iterator):
-
+                
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
                     continue
-
                 tr_loss += self.training_step(model, inputs)
-
+                
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                     # last step in epoch but step is always smaller than gradient_accumulation_steps
                     len(epoch_iterator) <= self.args.gradient_accumulation_steps
@@ -482,7 +482,7 @@ class Trainer(transformers.Trainer):
             delattr(self, "_past")
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss / self.global_step, None), self.objective
+        return TrainOutput(self.global_step, tr_loss/self.global_step)
 
 
     """
